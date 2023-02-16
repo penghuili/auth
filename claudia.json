@@ -1,0 +1,11 @@
+{
+  "lambda": {
+    "role": "auth-executor",
+    "name": "auth",
+    "region": "eu-central-1"
+  },
+  "api": {
+    "id": "ibvtp824o1",
+    "module": "src/app"
+  }
+}
