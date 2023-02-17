@@ -15,7 +15,7 @@ const userController = {
 
     const existingUser = await userClient.getByUsername(username);
     if (existingUser) {
-      throw response(errorCodes.USER_EXISTS, 400);
+      throw response(errorCodes.ALREADY_EXISTS, 400);
     }
 
     const { id } = await userClient.create({
@@ -42,7 +42,7 @@ const userController = {
       return { id, publicKey, encryptedPrivateKey, encryptedChallenge };
     }
 
-    throw response(errorCodes.USER_NOT_FOUND, 404);
+    throw response(errorCodes.NOT_FOUND, 404);
   },
 
   async signin(request) {
@@ -107,7 +107,7 @@ const userController = {
 
     return {
       ...mapUser(user),
-      backendPublicKey: process.env.PAGE_WATCHER_PUBLIC_KEY,
+      backendPublicKey: process.env.BACKEND_PUBLIC_KEY,
     };
   },
 

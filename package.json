@@ -28,9 +28,10 @@
     "aws-sdk": "2.1166.0"
   },
   "scripts": {
+    "deploy-test": "claudia update --version test --timeout 30 --no-optional-dependencies",
+    "deploy-prod": "claudia update --version prod --timeout 30 --no-optional-dependencies",
     "claudia": "claudia",
     "__create": "claudia create --region eu-central-1 --runtime nodejs16.x --api-module src/app",
-    "deploy-test": "claudia update --version test --timeout 30 --no-optional-dependencies",
     "test": "echo \"Error: no test specified\" && exit 1",
     "upgrade-node": "claudia update --runtime nodejs16.x --version prod --no-optional-dependencies"
   }

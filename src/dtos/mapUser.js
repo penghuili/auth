@@ -5,7 +5,6 @@ function mapUser({
   encryptedPrivateKey,
   createdAt,
   updatedAt,
-  telegramId,
 }) {
   return {
     id,
@@ -14,7 +13,6 @@ function mapUser({
     encryptedPrivateKey,
     createdAt,
     updatedAt,
-    telegramId,
   };
 }
 
