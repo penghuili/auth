@@ -23,8 +23,8 @@ async function verifyAccessTokenMiddleware(request) {
   }
 
   const issuedAt = decoded.iat * 1000;
-  const { tokenValidFrom } = await userClient.getByUserId(decoded.user);
-  if (tokenValidFrom && tokenValidFrom > issuedAt) {
+  const user = await userClient.getByUserId(decoded.user);
+  if (!user || (user?.tokenValidFrom && issuedAt < user?.tokenValidFrom)) {
     throw response(errorCodes.UNAUTHORIZED, 401);
   }
 
