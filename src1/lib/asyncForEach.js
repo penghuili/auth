@@ -9,4 +9,4 @@ async function asyncForEach(arr, asyncFunc) {
   }
 }
 
-module.exports = asyncForEach;
+export default asyncForEach;

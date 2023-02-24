@@ -1,6 +1,6 @@
-const dbClient = require('./dbClient');
-const sortKeys = require('../lib/sortKeys');
-const tokenClient = require('./tokenClient');
+import sortKeys from '../lib/sortKeys';
+import dbClient from './dbClient';
+import tokenClient from './tokenClient';
 
 const userClient = {
   async create({ username, publicKey, encryptedPrivateKey }) {
@@ -84,4 +84,4 @@ const userClient = {
   },
 };
 
-module.exports = userClient;
+export default userClient;

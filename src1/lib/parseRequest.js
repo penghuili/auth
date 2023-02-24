@@ -3,4 +3,4 @@ function parseRequest(request) {
   return { headers, pathParams, queryString, body, rawBody, locals };
 }
 
-module.exports = parseRequest;
+export default parseRequest;

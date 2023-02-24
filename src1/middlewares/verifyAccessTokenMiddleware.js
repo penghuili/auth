@@ -1,9 +1,8 @@
-const tokenClient = require('../clients/tokenClient');
-const userClient = require('../clients/userClient');
-
-const errorCodes = require('../lib/errorCodes');
-const parseRequest = require('../lib/parseRequest');
-const response = require('../lib/response');
+import tokenClient from '../clients/tokenClient';
+import userClient from '../clients/userClient';
+import errorCodes from '../lib/errorCodes';
+import parseRequest from '../lib/parseRequest';
+import response from '../lib/response';
 
 async function verifyAccessTokenMiddleware(request) {
   const { headers } = parseRequest(request);
@@ -31,4 +30,4 @@ async function verifyAccessTokenMiddleware(request) {
   return decoded;
 }
 
-module.exports = verifyAccessTokenMiddleware;
+export default verifyAccessTokenMiddleware;

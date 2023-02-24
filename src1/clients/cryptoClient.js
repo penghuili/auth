@@ -1,5 +1,5 @@
-const openpgp = require('openpgp');
-const crypto = require('crypto');
+import crypto from 'crypto';
+import openpgp from 'openpgp';
 
 function wrapPublicKey(publicKey) {
   return `-----BEGIN PGP PUBLIC KEY BLOCK-----
@@ -69,4 +69,4 @@ const cryptoClient = {
   },
 };
 
-module.exports = cryptoClient;
+export default cryptoClient;

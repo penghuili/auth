@@ -2,4 +2,4 @@ const sortKeys = {
   user: 'user',
 };
 
-module.exports = sortKeys;
+export default sortKeys;

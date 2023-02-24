@@ -16,4 +16,4 @@ function mapUser({
   };
 }
 
-module.exports = mapUser;
+export default mapUser;

@@ -1,11 +1,11 @@
-const cryptoClient = require('../clients/cryptoClient');
-const tokenClient = require('../clients/tokenClient');
-const userClient = require('../clients/userClient');
-const mapUser = require('../dtos/mapUser');
-const errorCodes = require('../lib/errorCodes');
-const parseRequest = require('../lib/parseRequest');
-const response = require('../lib/response');
-const verifyAccessTokenMiddleware = require('../middlewares/verifyAccessTokenMiddleware');
+import cryptoClient from '../clients/cryptoClient';
+import tokenClient from '../clients/tokenClient';
+import userClient from '../clients/userClient';
+import mapUser from '../dtos/mapUser';
+import errorCodes from '../lib/errorCodes';
+import parseRequest from '../lib/parseRequest';
+import response from '../lib/response';
+import verifyAccessTokenMiddleware from '../middlewares/verifyAccessTokenMiddleware';
 
 const userController = {
   async signup(request) {
@@ -151,4 +151,4 @@ const userController = {
   },
 };
 
-module.exports = userController;
+export default userController;

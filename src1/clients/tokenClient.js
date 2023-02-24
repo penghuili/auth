@@ -1,8 +1,9 @@
-const jsonwebtoken = require('jsonwebtoken');
-const { v4: uuidV4 } = require('uuid');
-const ShortId = require('short-unique-id');
-const errorCodes = require('../lib/errorCodes');
-const response = require('../lib/response');
+import jsonwebtoken from 'jsonwebtoken';
+import ShortId from 'short-unique-id';
+import { v4 as uuidV4 } from 'uuid';
+
+import errorCodes from '../lib/errorCodes';
+import response from '../lib/response';
 
 const sid = new ShortId({ length: 11 });
 
@@ -55,4 +56,4 @@ const tokenClient = {
   },
 };
 
-module.exports = tokenClient;
+export default tokenClient;

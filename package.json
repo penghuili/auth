@@ -1,19 +1,9 @@
 {
   "name": "auth",
   "version": "1.0.0",
-  "devDependencies": {
-    "claudia": "5.14.1",
-    "eslint": "7.32.0",
-    "eslint-config-airbnb": "19.0.4",
-    "eslint-config-prettier": "8.5.0",
-    "eslint-plugin-import": "2.26.0",
-    "eslint-plugin-jsx-a11y": "6.5.1",
-    "eslint-plugin-prettier": "4.0.0",
-    "eslint-plugin-react": "7.29.4",
-    "eslint-plugin-react-hooks": "4.5.0",
-    "madge": "5.0.1",
-    "prettier": "2.6.2"
-  },
+  "files": [
+    "src"
+  ],
   "dependencies": {
     "axios": "1.2.2",
     "claudia-api-builder": "4.1.2",
@@ -27,9 +17,28 @@
   "optionalDependencies": {
     "aws-sdk": "2.1166.0"
   },
+  "devDependencies": {
+    "@babel/cli": "7.21.0",
+    "@babel/core": "7.21.0",
+    "@babel/preset-env": "7.20.2",
+    "babel-plugin-add-module-exports": "1.0.4",
+    "babel-plugin-inline-dotenv": "1.7.0",
+    "claudia": "5.14.1",
+    "eslint": "7.32.0",
+    "eslint-config-airbnb": "19.0.4",
+    "eslint-config-prettier": "8.5.0",
+    "eslint-plugin-import": "2.26.0",
+    "eslint-plugin-jsx-a11y": "6.5.1",
+    "eslint-plugin-prettier": "4.0.0",
+    "eslint-plugin-react": "7.29.4",
+    "eslint-plugin-react-hooks": "4.5.0",
+    "madge": "5.0.1",
+    "prettier": "2.6.2"
+  },
   "scripts": {
-    "deploy-test": "claudia update --version test --timeout 30 --no-optional-dependencies",
-    "deploy-prod": "claudia update --version prod --timeout 30 --no-optional-dependencies",
+    "transpile": "rm -rf src && ./node_modules/.bin/babel src1 --out-dir src",
+    "deploy-test": "npm run transpile && claudia update --version test --timeout 30 --no-optional-dependencies",
+    "deploy-prod": "npm run transpile && claudia update --version prod --timeout 30 --no-optional-dependencies",
     "claudia": "claudia",
     "__create": "claudia create --region eu-central-1 --runtime nodejs16.x --api-module src/app",
     "test": "echo \"Error: no test specified\" && exit 1",

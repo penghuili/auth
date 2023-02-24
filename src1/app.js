@@ -1,5 +1,6 @@
-const ApiBuilder = require('claudia-api-builder');
-const userController = require('./controllers/userController');
+import ApiBuilder from 'claudia-api-builder';
+
+import userController from './controllers/userController';
 
 require('dotenv').config();
 
@@ -21,4 +22,4 @@ api.get('/v1/me', userController.getUser);
 api.post('/v1/me/password', userController.changePassword);
 api.delete('/v1/me', userController.deleteUser);
 
-module.exports = api;
+export default api;

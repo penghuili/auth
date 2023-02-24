@@ -7,4 +7,4 @@ const errorCodes = {
   UNKNOWN: 'UNKNOWN',
 };
 
-module.exports = errorCodes;
+export default errorCodes;
