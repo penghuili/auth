@@ -13,36 +13,49 @@ const userController = {
       body: { username, publicKey, encryptedPrivateKey },
     } = parseRequest(request);
 
-    const existingUser = await userClient.getByUsername(username);
-    if (existingUser) {
-      throw response(errorCodes.ALREADY_EXISTS, 400);
+    try {
+      const existingUser = await userClient.getByUsername(username);
+      if (existingUser) {
+        return response(errorCodes.ALREADY_EXISTS, 400);
+      }
+
+      const { id } = await userClient.create({
+        username,
+        publicKey,
+        encryptedPrivateKey,
+      });
+
+      return response({ id, username }, 200);
+    } catch (e) {
+      return response(errorCodes.UNKNOWN, 400);
     }
-
-    const { id } = await userClient.create({
-      username,
-      publicKey,
-      encryptedPrivateKey,
-    });
-
-    return { id, username };
   },
 
   async getUserPublic(request) {
     const {
       pathParams: { username },
     } = parseRequest(request);
-    const user = await userClient.getByUsername(username);
-    if (user) {
-      const { id, publicKey, encryptedPrivateKey, signinChallenge } = user;
-      const encryptedChallenge = await cryptoClient.encryptMessage(
-        publicKey,
-        signinChallenge
-      );
 
-      return { id, publicKey, encryptedPrivateKey, encryptedChallenge };
+    try {
+      const user = await userClient.getByUsername(username);
+      if (user) {
+        const { id, publicKey, encryptedPrivateKey, signinChallenge } = user;
+        const encryptedChallenge = await cryptoClient.encryptMessage(
+          publicKey,
+          signinChallenge
+        );
+
+        return response(
+          { id, publicKey, encryptedPrivateKey, encryptedChallenge },
+          200
+        );
+      }
+
+      return response(errorCodes.NOT_FOUND, 404);
+    } catch (e) {
+      console.log('get pubic user error', e);
+      return response(errorCodes.UNKNOWN, 400);
     }
-
-    throw response(errorCodes.NOT_FOUND, 404);
   },
 
   async signin(request) {
@@ -50,27 +63,34 @@ const userController = {
       body: { username, signinChallenge },
     } = parseRequest(request);
 
-    const user = await userClient.getByUsername(username);
-    if (!user) {
-      throw response(errorCodes.BAD_REQUEST, 400);
+    try {
+      const user = await userClient.getByUsername(username);
+      if (!user) {
+        return response(errorCodes.BAD_REQUEST, 400);
+      }
+
+      const { id, signinChallenge: signinChallengeInDB } = user;
+      if (signinChallengeInDB !== signinChallenge) {
+        return response(errorCodes.FORBIDDEN, 403);
+      }
+
+      const accessToken = tokenClient.generateAccessToken(id);
+      const refreshToken = tokenClient.generateRefreshToken(id);
+
+      await userClient.refreshSigninChallenge(id);
+
+      return response(
+        {
+          id,
+          accessToken,
+          refreshToken,
+          expiresIn: +process.env.JWT_ACCESS_TOKEN_EXPIRES_IN,
+        },
+        200
+      );
+    } catch (e) {
+      return response(errorCodes.UNKNOWN, 400);
     }
-
-    const { id, signinChallenge: signinChallengeInDB } = user;
-    if (signinChallengeInDB !== signinChallenge) {
-      throw response(errorCodes.FORBIDDEN, 403);
-    }
-
-    const accessToken = tokenClient.generateAccessToken(id);
-    const refreshToken = tokenClient.generateRefreshToken(id);
-
-    await userClient.refreshSigninChallenge(id);
-
-    return {
-      id,
-      accessToken,
-      refreshToken,
-      expiresIn: +process.env.JWT_ACCESS_TOKEN_EXPIRES_IN,
-    };
   },
 
   async refreshTokens(request) {
@@ -85,12 +105,15 @@ const userController = {
       const newAccessToken = tokenClient.generateAccessToken(userId);
       const newRefreshToken = tokenClient.generateRefreshToken(userId);
 
-      return {
-        id: userId,
-        accessToken: newAccessToken,
-        refreshToken: newRefreshToken,
-        expiresIn: +process.env.JWT_ACCESS_TOKEN_EXPIRES_IN,
-      };
+      return response(
+        {
+          id: userId,
+          accessToken: newAccessToken,
+          refreshToken: newRefreshToken,
+          expiresIn: +process.env.JWT_ACCESS_TOKEN_EXPIRES_IN,
+        },
+        200
+      );
     } catch (e) {
       return response(errorCodes.UNAUTHORIZED, 401);
     }
@@ -99,16 +122,23 @@ const userController = {
   async getUser(request) {
     const { user: userId } = await verifyAccessTokenMiddleware(request);
 
-    const user = await userClient.getByUserId(userId);
+    try {
+      const user = await userClient.getByUserId(userId);
 
-    if (!user) {
-      return response(errorCodes.NOT_FOUND, 404);
+      if (!user) {
+        return response(errorCodes.NOT_FOUND, 404);
+      }
+
+      return response(
+        {
+          ...mapUser(user),
+          backendPublicKey: process.env.BACKEND_PUBLIC_KEY,
+        },
+        200
+      );
+    } catch (e) {
+      return response(errorCodes.UNKNOWN, 400);
     }
-
-    return {
-      ...mapUser(user),
-      backendPublicKey: process.env.BACKEND_PUBLIC_KEY,
-    };
   },
 
   async changePassword(request) {
@@ -117,37 +147,51 @@ const userController = {
       body: { encryptedPrivateKey, signinChallenge },
     } = parseRequest(request);
 
-    const { signinChallenge: signinChallengeInDB } =
-      await userClient.getByUserId(userId);
+    try {
+      const { signinChallenge: signinChallengeInDB } =
+        await userClient.getByUserId(userId);
 
-    if (signinChallengeInDB !== signinChallenge) {
-      throw response(errorCodes.FORBIDDEN, 403);
+      if (signinChallengeInDB !== signinChallenge) {
+        return response(errorCodes.FORBIDDEN, 403);
+      }
+
+      const updatedUser = await userClient.updateEncryptedPrivateKey(
+        userId,
+        encryptedPrivateKey
+      );
+
+      return response(mapUser(updatedUser), 200);
+    } catch (e) {
+      return response(errorCodes.UNKNOWN, 400);
     }
-
-    const updatedUser = await userClient.updateEncryptedPrivateKey(
-      userId,
-      encryptedPrivateKey
-    );
-
-    return mapUser(updatedUser);
   },
 
   async logoutFromAllDevices(request) {
     const { user: userId } = await verifyAccessTokenMiddleware(request);
+    try {
+      const updatedUser = await userClient.logoutFromAllDevices(userId);
 
-    const updatedUser = await userClient.logoutFromAllDevices(userId);
-
-    return mapUser(updatedUser);
+      return response(mapUser(updatedUser), 200);
+    } catch (e) {
+      return response(errorCodes.UNKNOWN, 400);
+    }
   },
 
   async deleteUser(request) {
     const { user: userId } = await verifyAccessTokenMiddleware(request);
 
-    await userClient.deleteUser(userId);
+    try {
+      await userClient.deleteUser(userId);
 
-    return {
-      id: userId,
-    };
+      return response(
+        {
+          id: userId,
+        },
+        200
+      );
+    } catch (e) {
+      return response(errorCodes.UNKNOWN, 400);
+    }
   },
 };
 

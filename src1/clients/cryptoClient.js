@@ -1,5 +1,12 @@
 import crypto from 'crypto';
-import openpgp from 'openpgp';
+import {
+  createMessage,
+  decrypt,
+  encrypt,
+  readKey,
+  readMessage,
+  readPrivateKey,
+} from 'openpgp';
 
 function wrapPublicKey(publicKey) {
   return `-----BEGIN PGP PUBLIC KEY BLOCK-----
@@ -32,12 +39,12 @@ function unwrapEncryptedMessage(encryptedMessage) {
 const cryptoClient = {
   async encryptMessage(publicKey, message) {
     const wrappedPublicKey = wrapPublicKey(publicKey);
-    const publicKeyObj = await openpgp.readKey({
+    const publicKeyObj = await readKey({
       armoredKey: wrappedPublicKey,
     });
 
-    const wrappedMessage = await openpgp.createMessage({ text: message });
-    const encryptedMessage = await openpgp.encrypt({
+    const wrappedMessage = await createMessage({ text: message });
+    const encryptedMessage = await encrypt({
       message: wrappedMessage,
       encryptionKeys: publicKeyObj,
     });
@@ -47,15 +54,15 @@ const cryptoClient = {
 
   async decryptMessage(privateKey, encryptedMessage) {
     const wrappedMessage = wrapEncryptedMessage(encryptedMessage);
-    const messageObj = await openpgp.readMessage({
+    const messageObj = await readMessage({
       armoredMessage: wrappedMessage,
     });
     const wrappedPrivateKey = wrapPrivateKey(privateKey);
-    const privateKeyObj = await openpgp.readPrivateKey({
+    const privateKeyObj = await readPrivateKey({
       armoredKey: wrappedPrivateKey,
     });
 
-    const decryptedMessage = await openpgp.decrypt({
+    const decryptedMessage = await decrypt({
       message: messageObj,
       decryptionKeys: privateKeyObj,
     });
