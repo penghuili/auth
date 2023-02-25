@@ -1,11 +1,11 @@
-import cryptoClient from '../clients/cryptoClient';
 import tokenClient from '../clients/tokenClient';
 import userClient from '../clients/userClient';
 import mapUser from '../dtos/mapUser';
-import errorCodes from '../lib/errorCodes';
 import parseRequest from '../lib/parseRequest';
 import response from '../lib/response';
 import verifyAccessTokenMiddleware from '../middlewares/verifyAccessTokenMiddleware';
+import { encryptMessage } from '../shared/encryption';
+import httpErrorCodes from '../shared/httpErrorCodes';
 
 const userController = {
   async signup(request) {
@@ -16,7 +16,7 @@ const userController = {
     try {
       const existingUser = await userClient.getByUsername(username);
       if (existingUser) {
-        return response(errorCodes.ALREADY_EXISTS, 400);
+        return response(httpErrorCodes.ALREADY_EXISTS, 400);
       }
 
       const { id } = await userClient.create({
@@ -27,7 +27,7 @@ const userController = {
 
       return response({ id, username }, 200);
     } catch (e) {
-      return response(errorCodes.UNKNOWN, 400);
+      return response(httpErrorCodes.UNKNOWN, 400);
     }
   },
 
@@ -40,7 +40,7 @@ const userController = {
       const user = await userClient.getByUsername(username);
       if (user) {
         const { id, publicKey, encryptedPrivateKey, signinChallenge } = user;
-        const encryptedChallenge = await cryptoClient.encryptMessage(
+        const encryptedChallenge = await encryptMessage(
           publicKey,
           signinChallenge
         );
@@ -51,10 +51,10 @@ const userController = {
         );
       }
 
-      return response(errorCodes.NOT_FOUND, 404);
+      return response(httpErrorCodes.NOT_FOUND, 404);
     } catch (e) {
       console.log('get pubic user error', e);
-      return response(errorCodes.UNKNOWN, 400);
+      return response(httpErrorCodes.UNKNOWN, 400);
     }
   },
 
@@ -66,12 +66,12 @@ const userController = {
     try {
       const user = await userClient.getByUsername(username);
       if (!user) {
-        return response(errorCodes.BAD_REQUEST, 400);
+        return response(httpErrorCodes.BAD_REQUEST, 400);
       }
 
       const { id, signinChallenge: signinChallengeInDB } = user;
       if (signinChallengeInDB !== signinChallenge) {
-        return response(errorCodes.FORBIDDEN, 403);
+        return response(httpErrorCodes.FORBIDDEN, 403);
       }
 
       const accessToken = tokenClient.generateAccessToken(id);
@@ -89,7 +89,7 @@ const userController = {
         200
       );
     } catch (e) {
-      return response(errorCodes.UNKNOWN, 400);
+      return response(httpErrorCodes.UNKNOWN, 400);
     }
   },
 
@@ -115,7 +115,7 @@ const userController = {
         200
       );
     } catch (e) {
-      return response(errorCodes.UNAUTHORIZED, 401);
+      return response(httpErrorCodes.UNAUTHORIZED, 401);
     }
   },
 
@@ -126,7 +126,7 @@ const userController = {
       const user = await userClient.getByUserId(userId);
 
       if (!user) {
-        return response(errorCodes.NOT_FOUND, 404);
+        return response(httpErrorCodes.NOT_FOUND, 404);
       }
 
       return response(
@@ -137,7 +137,7 @@ const userController = {
         200
       );
     } catch (e) {
-      return response(errorCodes.UNKNOWN, 400);
+      return response(httpErrorCodes.UNKNOWN, 400);
     }
   },
 
@@ -152,7 +152,7 @@ const userController = {
         await userClient.getByUserId(userId);
 
       if (signinChallengeInDB !== signinChallenge) {
-        return response(errorCodes.FORBIDDEN, 403);
+        return response(httpErrorCodes.FORBIDDEN, 403);
       }
 
       const updatedUser = await userClient.updateEncryptedPrivateKey(
@@ -162,7 +162,7 @@ const userController = {
 
       return response(mapUser(updatedUser), 200);
     } catch (e) {
-      return response(errorCodes.UNKNOWN, 400);
+      return response(httpErrorCodes.UNKNOWN, 400);
     }
   },
 
@@ -173,7 +173,7 @@ const userController = {
 
       return response(mapUser(updatedUser), 200);
     } catch (e) {
-      return response(errorCodes.UNKNOWN, 400);
+      return response(httpErrorCodes.UNKNOWN, 400);
     }
   },
 
@@ -190,7 +190,7 @@ const userController = {
         200
       );
     } catch (e) {
-      return response(errorCodes.UNKNOWN, 400);
+      return response(httpErrorCodes.UNKNOWN, 400);
     }
   },
 };

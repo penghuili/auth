@@ -36,9 +36,11 @@
     "prettier": "2.6.2"
   },
   "scripts": {
+    "deploy-test": "npm run prepare-build && claudia update --version test --timeout 30 --no-optional-dependencies",
+    "deploy-prod": "npm run prepare-build && claudia update --version prod --timeout 30 --no-optional-dependencies",
+    "copyshared": "rm -rf src1/shared && cp -a ../sharedjs/lib/js src1/shared",
     "transpile": "rm -rf src && ./node_modules/.bin/babel src1 --out-dir src",
-    "deploy-test": "npm run transpile && claudia update --version test --timeout 30 --no-optional-dependencies",
-    "deploy-prod": "npm run transpile && claudia update --version prod --timeout 30 --no-optional-dependencies",
+    "prepare-build": "npm run copyshared && npm run transpile",
     "claudia": "claudia",
     "__create": "claudia create --region eu-central-1 --runtime nodejs16.x --api-module src/app",
     "test": "echo \"Error: no test specified\" && exit 1",

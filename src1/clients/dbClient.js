@@ -1,6 +1,5 @@
-import asyncForEach from '../lib/asyncForEach';
+import asyncForEach from '../shared/asyncForEach';
 
-// eslint-disable-next-line import/no-extraneous-dependencies
 const AWS = require('aws-sdk');
 
 const db = new AWS.DynamoDB.DocumentClient({ region: process.env.AWS_REGION });

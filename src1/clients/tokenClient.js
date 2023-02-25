@@ -2,8 +2,8 @@ import jsonwebtoken from 'jsonwebtoken';
 import ShortId from 'short-unique-id';
 import { v4 as uuidV4 } from 'uuid';
 
-import errorCodes from '../lib/errorCodes';
 import response from '../lib/response';
+import httpErrorCodes from '../shared/httpErrorCodes';
 
 const sid = new ShortId({ length: 11 });
 
@@ -45,7 +45,7 @@ const tokenClient = {
       );
       return decoded;
     } catch (error) {
-      throw response(errorCodes.UNAUTHORIZED, 401);
+      throw response(httpErrorCodes.UNAUTHORIZED, 401);
     }
   },
   uuid() {

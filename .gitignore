@@ -9,6 +9,7 @@
 # production
 /build
 src
+src1/shared
 
 # misc
 .DS_Store
