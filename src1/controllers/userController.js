@@ -1,6 +1,7 @@
 import tokenClient from '../clients/tokenClient';
 import userClient from '../clients/userClient';
 import mapUser from '../dtos/mapUser';
+import hasValidIssuedAt from '../lib/hasValidIssuedAt';
 import parseRequest from '../lib/parseRequest';
 import response from '../lib/response';
 import verifyAccessTokenMiddleware from '../middlewares/verifyAccessTokenMiddleware';
@@ -100,6 +101,8 @@ const userController = {
 
     try {
       const decoded = tokenClient.verifyRefreshToken(refreshToken);
+
+      await hasValidIssuedAt(decoded);
 
       const userId = decoded.user;
       const newAccessToken = tokenClient.generateAccessToken(userId);

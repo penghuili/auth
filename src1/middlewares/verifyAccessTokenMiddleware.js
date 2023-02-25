@@ -1,5 +1,5 @@
 import tokenClient from '../clients/tokenClient';
-import userClient from '../clients/userClient';
+import hasValidIssuedAt from '../lib/hasValidIssuedAt';
 import parseRequest from '../lib/parseRequest';
 import response from '../lib/response';
 import httpErrorCodes from '../shared/httpErrorCodes';
@@ -21,11 +21,7 @@ async function verifyAccessTokenMiddleware(request) {
     throw response(httpErrorCodes.UNAUTHORIZED, 401);
   }
 
-  const issuedAt = decoded.iat * 1000;
-  const user = await userClient.getByUserId(decoded.user);
-  if (!user || (user?.tokenValidFrom && issuedAt < user?.tokenValidFrom)) {
-    throw response(httpErrorCodes.UNAUTHORIZED, 401);
-  }
+  await hasValidIssuedAt(decoded);
 
   return decoded;
 }
