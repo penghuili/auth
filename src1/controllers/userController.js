@@ -1,12 +1,12 @@
-import tokenClient from '../clients/tokenClient';
-import userClient from '../clients/userClient';
 import mapUser from '../dtos/mapUser';
-import hasValidIssuedAt from '../lib/hasValidIssuedAt';
-import parseRequest from '../lib/parseRequest';
-import response from '../lib/response';
-import verifyAccessTokenMiddleware from '../middlewares/verifyAccessTokenMiddleware';
-import { encryptMessage } from '../shared/encryption';
-import httpErrorCodes from '../shared/httpErrorCodes';
+import { encryptMessage } from '../shared/js/encryption';
+import httpErrorCodes from '../shared/js/httpErrorCodes';
+import hasValidIssuedAt from '../shared/node/hasValidIssuedAt';
+import parseRequest from '../shared/node/parseRequest';
+import response from '../shared/node/response';
+import tokenClient from '../shared/node/tokenClient';
+import userClient from '../shared/node/userClient';
+import verifyAccessTokenMiddleware from '../shared/node/verifyAccessTokenMiddleware';
 
 const userController = {
   async signup(request) {
