@@ -28,6 +28,7 @@ const userController = {
 
       return response({ id, username }, 200);
     } catch (e) {
+      console.log('signup error', e);
       return response(httpErrorCodes.UNKNOWN, 400);
     }
   },
@@ -90,6 +91,7 @@ const userController = {
         200
       );
     } catch (e) {
+      console.log('signin error', e);
       return response(httpErrorCodes.UNKNOWN, 400);
     }
   },
@@ -165,6 +167,7 @@ const userController = {
 
       return response(mapUser(updatedUser), 200);
     } catch (e) {
+      console.log('change password error', e);
       return response(httpErrorCodes.UNKNOWN, 400);
     }
   },
@@ -193,6 +196,7 @@ const userController = {
         200
       );
     } catch (e) {
+      console.log('delete user error', e);
       return response(httpErrorCodes.UNKNOWN, 400);
     }
   },
