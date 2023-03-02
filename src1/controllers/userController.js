@@ -7,6 +7,7 @@ import response from '../shared/node/response';
 import tokenClient from '../shared/node/tokenClient';
 import userClient from '../shared/node/userClient';
 import verifyAccessTokenMiddleware from '../shared/node/verifyAccessTokenMiddleware';
+import telegramClient from '../shared/node/telegramClient';
 
 const userController = {
   async signup(request) {
@@ -25,6 +26,11 @@ const userController = {
         publicKey,
         encryptedPrivateKey,
       });
+
+      await telegramClient.sendMessage(
+        process.env.ADMIN_TELEGRAM_ID,
+        `Someone signed up :)`
+      );
 
       return response({ id, username }, 200);
     } catch (e) {
