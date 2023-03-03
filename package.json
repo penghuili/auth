@@ -10,6 +10,7 @@
     "date-fns": "2.29.3",
     "dotenv": "16.0.1",
     "jsonwebtoken": "9.0.0",
+    "node-2fa": "2.0.3",
     "openpgp": "5.5.0",
     "short-unique-id": "4.4.4",
     "uuid": "8.3.2"

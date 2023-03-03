@@ -3,6 +3,8 @@ function mapUser({
   username,
   publicKey,
   encryptedPrivateKey,
+  twoFactorSecret,
+  twoFactorEnabled,
   createdAt,
   updatedAt,
 }) {
@@ -11,6 +13,8 @@ function mapUser({
     username,
     publicKey,
     encryptedPrivateKey,
+    twoFactorUri: twoFactorSecret?.uri,
+    twoFactorEnabled,
     createdAt,
     updatedAt,
   };

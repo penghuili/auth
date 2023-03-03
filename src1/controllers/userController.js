@@ -8,6 +8,7 @@ import tokenClient from '../shared/node/tokenClient';
 import userClient from '../shared/node/userClient';
 import verifyAccessTokenMiddleware from '../shared/node/verifyAccessTokenMiddleware';
 import telegramClient from '../shared/node/telegramClient';
+import twoFactorClient from '../clients/twoFactorClient';
 
 const userController = {
   async signup(request) {
@@ -77,27 +78,48 @@ const userController = {
         return response(httpErrorCodes.BAD_REQUEST, 400);
       }
 
-      const { id, signinChallenge: signinChallengeInDB } = user;
+      const {
+        id,
+        signinChallenge: signinChallengeInDB,
+        twoFactorEnabled,
+      } = user;
       if (signinChallengeInDB !== signinChallenge) {
         return response(httpErrorCodes.FORBIDDEN, 403);
       }
 
-      const accessToken = tokenClient.generateAccessToken(id);
-      const refreshToken = tokenClient.generateRefreshToken(id);
+      if (twoFactorEnabled) {
+        const tempToken = tokenClient.generateTempToken(id);
 
-      await userClient.refreshSigninChallenge(id);
+        return response({ tempToken }, 200);
+      }
 
-      return response(
-        {
-          id,
-          accessToken,
-          refreshToken,
-          expiresIn: +process.env.JWT_ACCESS_TOKEN_EXPIRES_IN,
-        },
-        200
-      );
+      const tokens = await userClient.generateTokens(id);
+
+      return response(tokens, 200);
     } catch (e) {
       console.log('signin error', e);
+      return response(httpErrorCodes.UNKNOWN, 400);
+    }
+  },
+
+  async verify2FA(request) {
+    const {
+      body: { tempToken, code },
+    } = parseRequest(request);
+
+    try {
+      const decoded = tokenClient.verifyTempToken(tempToken);
+      const userId = decoded.user;
+      const isValidCode = await twoFactorClient.verifyCode(userId, code);
+      if (!isValidCode) {
+        return response(httpErrorCodes.FORBIDDEN, 403);
+      }
+
+      const tokens = await userClient.generateTokens(userId);
+
+      return response(tokens, 200);
+    } catch (e) {
+      console.log('verify 2fa error', e);
       return response(httpErrorCodes.UNKNOWN, 400);
     }
   },
@@ -113,18 +135,9 @@ const userController = {
       await hasValidIssuedAt(decoded);
 
       const userId = decoded.user;
-      const newAccessToken = tokenClient.generateAccessToken(userId);
-      const newRefreshToken = tokenClient.generateRefreshToken(userId);
+      const tokens = await userClient.generateTokens(userId);
 
-      return response(
-        {
-          id: userId,
-          accessToken: newAccessToken,
-          refreshToken: newRefreshToken,
-          expiresIn: +process.env.JWT_ACCESS_TOKEN_EXPIRES_IN,
-        },
-        200
-      );
+      return response(tokens, 200);
     } catch (e) {
       return response(httpErrorCodes.UNAUTHORIZED, 401);
     }
@@ -174,6 +187,46 @@ const userController = {
       return response(mapUser(updatedUser), 200);
     } catch (e) {
       console.log('change password error', e);
+      return response(httpErrorCodes.UNKNOWN, 400);
+    }
+  },
+
+  async generate2FASecret(request) {
+    const { user: userId } = await verifyAccessTokenMiddleware(request);
+
+    try {
+      const user = await userClient.getByUserId(userId);
+      if (!user) {
+        return response(httpErrorCodes.NOT_FOUND, 404);
+      }
+
+      const uri = await twoFactorClient.generateSecret(user.username);
+
+      return response({ uri }, 200);
+    } catch (e) {
+      console.log('generate 2fa secret error', e);
+      return response(httpErrorCodes.UNKNOWN, 400);
+    }
+  },
+
+  async enable2FA(request) {
+    const { user: userId } = await verifyAccessTokenMiddleware(request);
+    const {
+      body: { code },
+    } = parseRequest(request);
+
+    try {
+      const isValid = await twoFactorClient.verifyCode(userId, code);
+
+      if (!isValid) {
+        return response(httpErrorCodes.FORBIDDEN, 403);
+      }
+
+      const updatedUser = await userClient.enable2FA(userId);
+
+      return response(mapUser(updatedUser), 200);
+    } catch (e) {
+      console.log('enable 2fa error', e);
       return response(httpErrorCodes.UNKNOWN, 400);
     }
   },
