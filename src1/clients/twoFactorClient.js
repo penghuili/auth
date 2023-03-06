@@ -37,6 +37,17 @@ const twoFactorClient = {
 
     return updatedUser;
   },
+
+  async disable2FA(userId) {
+    const user = await userClient.getByUserId(userId);
+    if (!user) {
+      return response(httpErrorCodes.NOT_FOUND, 404);
+    }
+
+    const updatedUser = await userClient.disable2FA(userId);
+
+    return updatedUser;
+  },
 };
 
 export default twoFactorClient;

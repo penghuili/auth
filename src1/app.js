@@ -24,5 +24,6 @@ api.post('/v1/me/password', userController.changePassword);
 api.delete('/v1/me', userController.deleteUser);
 api.post('/v1/2fa/secret', userController.generate2FASecret);
 api.post('/v1/2fa/enable', userController.enable2FA);
+api.post('/v1/2fa/disable', userController.disable2FA);
 
 export default api;

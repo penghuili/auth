@@ -231,6 +231,28 @@ const userController = {
     }
   },
 
+  async disable2FA(request) {
+    const { user: userId } = await verifyAccessTokenMiddleware(request);
+    const {
+      body: { code },
+    } = parseRequest(request);
+
+    try {
+      const isValid = await twoFactorClient.verifyCode(userId, code);
+
+      if (!isValid) {
+        return response(httpErrorCodes.FORBIDDEN, 403);
+      }
+
+      const updatedUser = await userClient.disable2FA(userId);
+
+      return response(mapUser(updatedUser), 200);
+    } catch (e) {
+      console.log('disable 2fa error', e);
+      return response(httpErrorCodes.UNKNOWN, 400);
+    }
+  },
+
   async logoutFromAllDevices(request) {
     const { user: userId } = await verifyAccessTokenMiddleware(request);
     try {
