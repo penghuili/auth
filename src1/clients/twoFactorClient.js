@@ -8,7 +8,7 @@ import { decryptMessage } from '../shared/js/encryption';
 const twoFactorClient = {
   async generateSecret(username) {
     const { secret, uri } = generateSecret({
-      name: 'peng37.com',
+      name: 'encrypt37.com',
       account: username,
     });
 

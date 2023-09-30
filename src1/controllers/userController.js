@@ -1,14 +1,14 @@
+import twoFactorClient from '../clients/twoFactorClient';
 import mapUser from '../dtos/mapUser';
 import { encryptMessage } from '../shared/js/encryption';
 import httpErrorCodes from '../shared/js/httpErrorCodes';
 import hasValidIssuedAt from '../shared/node/hasValidIssuedAt';
 import parseRequest from '../shared/node/parseRequest';
 import response from '../shared/node/response';
+import telegramClient from '../shared/node/telegramClient';
 import tokenClient from '../shared/node/tokenClient';
 import userClient from '../shared/node/userClient';
 import verifyAccessTokenMiddleware from '../shared/node/verifyAccessTokenMiddleware';
-import telegramClient from '../shared/node/telegramClient';
-import twoFactorClient from '../clients/twoFactorClient';
 
 const userController = {
   async signup(request) {

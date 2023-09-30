@@ -1,4 +1,4 @@
-# auth API for peng.kiwi
+# auth API for encrypt37.com
 
 ## Your password is never saved in DB, even the hashed version
 
