@@ -1,22 +1,28 @@
-import twoFactorClient from '../clients/twoFactorClient';
-import mapUser from '../dtos/mapUser';
+import { twoFactorClient } from '../clients/twoFactorClient';
+import { mapUser } from '../dtos/mapUser';
 import { encryptMessage } from '../shared/js/encryption';
-import httpErrorCodes from '../shared/js/httpErrorCodes';
-import hasValidIssuedAt from '../shared/node/hasValidIssuedAt';
-import parseRequest from '../shared/node/parseRequest';
-import response from '../shared/node/response';
-import telegramClient from '../shared/node/telegramClient';
-import tokenClient from '../shared/node/tokenClient';
-import userClient from '../shared/node/userClient';
-import verifyAccessTokenMiddleware from '../shared/node/verifyAccessTokenMiddleware';
+import { httpErrorCodes } from '../shared/js/httpErrorCodes';
+import { isValidUsername } from '../shared/js/regex';
+import { hasValidIssuedAt } from '../shared/node/hasValidIssuedAt';
+import { parseRequest } from '../shared/node/parseRequest';
+import { response } from '../shared/node/response';
+import { telegramClient } from '../shared/node/telegramClient';
+import { tokenClient } from '../shared/node/tokenClient';
+import { userClient } from '../shared/node/userClient';
+import { verifyAccessTokenMiddleware } from '../shared/node/verifyAccessTokenMiddleware';
 
-const userController = {
+export const userController = {
   async signup(request) {
     const {
       body: { username, publicKey, encryptedPrivateKey },
     } = parseRequest(request);
 
     try {
+      const isValidName = isValidUsername(username);
+      if (!isValidName) {
+        return response(httpErrorCodes.INVALID_USERNAME, 400);
+      }
+
       const existingUser = await userClient.getByUsername(username);
       if (existingUser) {
         return response(httpErrorCodes.ALREADY_EXISTS, 400);
@@ -82,6 +88,7 @@ const userController = {
         id,
         signinChallenge: signinChallengeInDB,
         twoFactorEnabled,
+        twoFactorChecked,
       } = user;
       if (signinChallengeInDB !== signinChallenge) {
         return response(httpErrorCodes.FORBIDDEN, 403);
@@ -95,7 +102,7 @@ const userController = {
 
       const tokens = await userClient.generateTokens(id);
 
-      return response(tokens, 200);
+      return response({ ...tokens, twoFactorChecked }, 200);
     } catch (e) {
       console.log('signin error', e);
       return response(httpErrorCodes.UNKNOWN, 400);
@@ -191,6 +198,19 @@ const userController = {
     }
   },
 
+  async skip2FA(request) {
+    const { user: userId } = await verifyAccessTokenMiddleware(request);
+
+    try {
+      const updatedUser = await userClient.skip2FA(userId);
+
+      return response(mapUser(updatedUser), 200);
+    } catch (e) {
+      console.log('skip 2fa error', e);
+      return response(httpErrorCodes.UNKNOWN, 400);
+    }
+  },
+
   async generate2FASecret(request) {
     const { user: userId } = await verifyAccessTokenMiddleware(request);
 
@@ -282,5 +302,3 @@ const userController = {
     }
   },
 };
-
-export default userController;

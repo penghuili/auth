@@ -1,10 +1,11 @@
-function mapUser({
+export function mapUser({
   id,
   username,
   publicKey,
   encryptedPrivateKey,
   twoFactorSecret,
   twoFactorEnabled,
+  twoFactorChecked,
   createdAt,
   updatedAt,
 }) {
@@ -15,9 +16,8 @@ function mapUser({
     encryptedPrivateKey,
     twoFactorUri: twoFactorSecret?.uri,
     twoFactorEnabled,
+    twoFactorChecked,
     createdAt,
     updatedAt,
   };
 }
-
-export default mapUser;

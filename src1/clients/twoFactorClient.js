@@ -1,11 +1,10 @@
 import { generateSecret, verifyToken } from 'node-2fa';
-
-import httpErrorCodes from '../shared/js/httpErrorCodes';
-import response from '../shared/node/response';
-import userClient from '../shared/node/userClient';
 import { decryptMessage } from '../shared/js/encryption';
+import { httpErrorCodes } from '../shared/js/httpErrorCodes';
+import { response } from '../shared/node/response';
+import { userClient } from '../shared/node/userClient';
 
-const twoFactorClient = {
+export const twoFactorClient = {
   async generateSecret(username) {
     const { secret, uri } = generateSecret({
       name: 'encrypt37.com',
@@ -58,5 +57,3 @@ const twoFactorClient = {
     return updatedUser;
   },
 };
-
-export default twoFactorClient;
