@@ -5,7 +5,7 @@
     "src"
   ],
   "dependencies": {
-    "axios": "1.2.2",
+    "axios": "1.6.0",
     "claudia-api-builder": "4.1.2",
     "date-fns": "2.29.3",
     "dotenv": "16.0.1",
@@ -38,8 +38,8 @@
   },
   "scripts": {
     "cc": "node scripts/commit.js",
-    "deploy-test": "npm run prepare-build && claudia update --version test --timeout 30 --no-optional-dependencies",
-    "deploy-prod": "npm run prepare-build && claudia update --version prod --timeout 30 --no-optional-dependencies",
+    "deploy-test": "npm run prepare-build && claudia update --version test --timeout 600 --no-optional-dependencies",
+    "deploy-prod": "npm run prepare-build && claudia update --version prod --timeout 600 --no-optional-dependencies",
     "copyshared": "rm -rf src1/shared && mkdir src1/shared && cp -a ../sharedjs/lib/js src1/shared/js && cp -a ../sharedjs/lib/node src1/shared/node",
     "transpile": "rm -rf src && ./node_modules/.bin/babel src1 --out-dir src",
     "prepare-build": "npm run copyshared && npm run transpile",

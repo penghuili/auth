@@ -1,13 +1,13 @@
 import { generateSecret, verifyToken } from 'node-2fa';
+import { decryptMessage } from '../shared/js/encryption';
+import { httpErrorCodes } from '../shared/js/httpErrorCodes';
+import { response } from '../shared/node/response';
+import { userClient } from '../shared/node/userClient';
 
-import httpErrorCodes from '../shared/js/httpErrorCodes';
-import response from '../shared/node/response';
-import userClient from '../shared/node/userClient';
-
-const twoFactorClient = {
+export const twoFactorClient = {
   async generateSecret(username) {
     const { secret, uri } = generateSecret({
-      name: 'peng.kiwi',
+      name: 'peng37.com',
       account: username,
     });
 
@@ -22,8 +22,16 @@ const twoFactorClient = {
       return response(httpErrorCodes.NOT_FOUND, 404);
     }
 
-    const secret = user?.twoFactorSecret?.secret;
-    const result = verifyToken(secret, code);
+    const secret = user?.twoFactorSecret?.secretForBackend;
+    if (!secret) {
+      return response(httpErrorCodes.BAD_REQUEST, 400);
+    }
+
+    const decryptedSecret = await decryptMessage(
+      JSON.parse(`"${process.env.BACKEND_PRIVATE_KEY}"`),
+      secret
+    );
+    const result = verifyToken(decryptedSecret, code);
     return result?.delta === 0;
   },
 
@@ -49,5 +57,3 @@ const twoFactorClient = {
     return updatedUser;
   },
 };
-
-export default twoFactorClient;

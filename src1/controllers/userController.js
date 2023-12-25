@@ -1,22 +1,28 @@
-import mapUser from '../dtos/mapUser';
+import { twoFactorClient } from '../clients/twoFactorClient';
+import { mapUser } from '../dtos/mapUser';
 import { encryptMessage } from '../shared/js/encryption';
-import httpErrorCodes from '../shared/js/httpErrorCodes';
-import hasValidIssuedAt from '../shared/node/hasValidIssuedAt';
-import parseRequest from '../shared/node/parseRequest';
-import response from '../shared/node/response';
-import tokenClient from '../shared/node/tokenClient';
-import userClient from '../shared/node/userClient';
-import verifyAccessTokenMiddleware from '../shared/node/verifyAccessTokenMiddleware';
-import telegramClient from '../shared/node/telegramClient';
-import twoFactorClient from '../clients/twoFactorClient';
+import { httpErrorCodes } from '../shared/js/httpErrorCodes';
+import { isValidUsername } from '../shared/js/regex';
+import { hasValidIssuedAt } from '../shared/node/hasValidIssuedAt';
+import { parseRequest } from '../shared/node/parseRequest';
+import { response } from '../shared/node/response';
+import { telegramClient } from '../shared/node/telegramClient';
+import { tokenClient } from '../shared/node/tokenClient';
+import { userClient } from '../shared/node/userClient';
+import { verifyAccessTokenMiddleware } from '../shared/node/verifyAccessTokenMiddleware';
 
-const userController = {
+export const userController = {
   async signup(request) {
     const {
       body: { username, publicKey, encryptedPrivateKey },
     } = parseRequest(request);
 
     try {
+      const isValidName = isValidUsername(username);
+      if (!isValidName) {
+        return response(httpErrorCodes.INVALID_USERNAME, 400);
+      }
+
       const existingUser = await userClient.getByUsername(username);
       if (existingUser) {
         return response(httpErrorCodes.ALREADY_EXISTS, 400);
@@ -28,10 +34,7 @@ const userController = {
         encryptedPrivateKey,
       });
 
-      await telegramClient.sendMessage(
-        process.env.ADMIN_TELEGRAM_ID,
-        `Someone signed up :)`
-      );
+      await telegramClient.sendMessage(process.env.ADMIN_TELEGRAM_ID, `Someone signed up :)`);
 
       return response({ id, username }, 200);
     } catch (e) {
@@ -49,15 +52,9 @@ const userController = {
       const user = await userClient.getByUsername(username);
       if (user) {
         const { id, publicKey, encryptedPrivateKey, signinChallenge } = user;
-        const encryptedChallenge = await encryptMessage(
-          publicKey,
-          signinChallenge
-        );
+        const encryptedChallenge = await encryptMessage(publicKey, signinChallenge);
 
-        return response(
-          { id, publicKey, encryptedPrivateKey, encryptedChallenge },
-          200
-        );
+        return response({ id, publicKey, encryptedPrivateKey, encryptedChallenge }, 200);
       }
 
       return response(httpErrorCodes.NOT_FOUND, 404);
@@ -78,11 +75,7 @@ const userController = {
         return response(httpErrorCodes.BAD_REQUEST, 400);
       }
 
-      const {
-        id,
-        signinChallenge: signinChallengeInDB,
-        twoFactorEnabled,
-      } = user;
+      const { id, signinChallenge: signinChallengeInDB, twoFactorEnabled, twoFactorChecked } = user;
       if (signinChallengeInDB !== signinChallenge) {
         return response(httpErrorCodes.FORBIDDEN, 403);
       }
@@ -95,7 +88,7 @@ const userController = {
 
       const tokens = await userClient.generateTokens(id);
 
-      return response(tokens, 200);
+      return response({ ...tokens, twoFactorChecked }, 200);
     } catch (e) {
       console.log('signin error', e);
       return response(httpErrorCodes.UNKNOWN, 400);
@@ -172,21 +165,30 @@ const userController = {
     } = parseRequest(request);
 
     try {
-      const { signinChallenge: signinChallengeInDB } =
-        await userClient.getByUserId(userId);
+      const { signinChallenge: signinChallengeInDB } = await userClient.getByUserId(userId);
 
       if (signinChallengeInDB !== signinChallenge) {
         return response(httpErrorCodes.FORBIDDEN, 403);
       }
 
-      const updatedUser = await userClient.updateEncryptedPrivateKey(
-        userId,
-        encryptedPrivateKey
-      );
+      const updatedUser = await userClient.updateEncryptedPrivateKey(userId, encryptedPrivateKey);
 
       return response(mapUser(updatedUser), 200);
     } catch (e) {
       console.log('change password error', e);
+      return response(httpErrorCodes.UNKNOWN, 400);
+    }
+  },
+
+  async skip2FA(request) {
+    const { user: userId } = await verifyAccessTokenMiddleware(request);
+
+    try {
+      const updatedUser = await userClient.skip2FA(userId);
+
+      return response(mapUser(updatedUser), 200);
+    } catch (e) {
+      console.log('skip 2fa error', e);
       return response(httpErrorCodes.UNKNOWN, 400);
     }
   },
@@ -282,5 +284,3 @@ const userController = {
     }
   },
 };
-
-export default userController;
