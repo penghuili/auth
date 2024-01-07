@@ -32,7 +32,8 @@ export const twoFactorClient = {
       secret
     );
     const result = verifyToken(decryptedSecret, code);
-    return result?.delta === 0;
+    const delta = result?.delta;
+    return delta === 0 || delta === 1 || delta === -1;
   },
 
   async enable2FA(userId) {
