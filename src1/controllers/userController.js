@@ -1,6 +1,6 @@
 import { twoFactorClient } from '../clients/twoFactorClient';
 import { mapUser } from '../dtos/mapUser';
-import { encryptMessage } from '../shared/js/encryption';
+import { encryptMessageAsymmetric } from '../shared/js/encryption';
 import { httpErrorCodes } from '../shared/js/httpErrorCodes';
 import { isValidUsername } from '../shared/js/regex';
 import { hasValidIssuedAt } from '../shared/node/hasValidIssuedAt';
@@ -52,7 +52,7 @@ export const userController = {
       const user = await userClient.getByUsername(username);
       if (user) {
         const { id, publicKey, encryptedPrivateKey, signinChallenge } = user;
-        const encryptedChallenge = await encryptMessage(publicKey, signinChallenge);
+        const encryptedChallenge = await encryptMessageAsymmetric(publicKey, signinChallenge);
 
         return response({ id, publicKey, encryptedPrivateKey, encryptedChallenge }, 200);
       }
