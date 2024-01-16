@@ -10,6 +10,7 @@
 /build
 src
 src1/shared
+src1/shared-private
 
 # misc
 .DS_Store

@@ -1,12 +1,12 @@
 import { twoFactorClient } from '../clients/twoFactorClient';
 import { mapUser } from '../dtos/mapUser';
+import { telegramClient } from '../shared-private/node/telegramClient';
 import { encryptMessageAsymmetric } from '../shared/js/encryption';
 import { httpErrorCodes } from '../shared/js/httpErrorCodes';
 import { isValidUsername } from '../shared/js/regex';
 import { hasValidIssuedAt } from '../shared/node/hasValidIssuedAt';
 import { parseRequest } from '../shared/node/parseRequest';
 import { response } from '../shared/node/response';
-import { telegramClient } from '../shared/node/telegramClient';
 import { tokenClient } from '../shared/node/tokenClient';
 import { userClient } from '../shared/node/userClient';
 import { verifyAccessTokenMiddleware } from '../shared/node/verifyAccessTokenMiddleware';
