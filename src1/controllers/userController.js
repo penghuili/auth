@@ -11,32 +11,51 @@ import { tokenClient } from '../shared/node/tokenClient';
 import { userClient } from '../shared/node/userClient';
 import { verifyAccessTokenMiddleware } from '../shared/node/verifyAccessTokenMiddleware';
 
+async function getUser(username, email) {
+  if (username) {
+    return userClient.getByUsername(username);
+  }
+
+  if (email) {
+    return userClient.getByEmail(email);
+  }
+
+  return null;
+}
+
 export const userController = {
   async signup(request) {
     const {
-      body: { username, publicKey, encryptedPrivateKey },
+      body: { username, email, publicKey, encryptedPrivateKey },
     } = parseRequest(request);
 
     try {
-      const isValidName = isValidUsername(username);
-      if (!isValidName) {
-        return response(httpErrorCodes.INVALID_USERNAME, 400);
+      if (!username && !email) {
+        return response(httpErrorCodes.NO_USERNAME_OR_EMAIL, 400);
       }
 
-      const existingUser = await userClient.getByUsername(username);
+      if (username) {
+        const isValidName = isValidUsername(username);
+        if (!isValidName) {
+          return response(httpErrorCodes.INVALID_USERNAME, 400);
+        }
+      }
+
+      const existingUser = await getUser(username, email);
       if (existingUser) {
         return response(httpErrorCodes.ALREADY_EXISTS, 400);
       }
 
       const { id } = await userClient.create({
         username,
+        email,
         publicKey,
         encryptedPrivateKey,
       });
 
       await telegramClient.sendMessage(process.env.ADMIN_TELEGRAM_ID, `Someone signed up :)`);
 
-      return response({ id, username }, 200);
+      return response({ id, username, email }, 200);
     } catch (e) {
       console.log('signup error', e);
       return response(httpErrorCodes.UNKNOWN, 400);
@@ -45,11 +64,34 @@ export const userController = {
 
   async getUserPublic(request) {
     const {
-      pathParams: { username },
+      pathParams: { username, email },
     } = parseRequest(request);
 
     try {
-      const user = await userClient.getByUsername(username);
+      const user = await getUser(username, email);
+
+      if (user) {
+        const { id, publicKey, encryptedPrivateKey, signinChallenge } = user;
+        const encryptedChallenge = await encryptMessageAsymmetric(publicKey, signinChallenge);
+
+        return response({ id, publicKey, encryptedPrivateKey, encryptedChallenge }, 200);
+      }
+
+      return response(httpErrorCodes.NOT_FOUND, 404);
+    } catch (e) {
+      console.log('get pubic user error', e);
+      return response(httpErrorCodes.UNKNOWN, 400);
+    }
+  },
+
+  async getUserPublic2(request) {
+    const {
+      body: { username, email },
+    } = parseRequest(request);
+
+    try {
+      const user = await getUser(username, email);
+
       if (user) {
         const { id, publicKey, encryptedPrivateKey, signinChallenge } = user;
         const encryptedChallenge = await encryptMessageAsymmetric(publicKey, signinChallenge);
@@ -66,11 +108,11 @@ export const userController = {
 
   async signin(request) {
     const {
-      body: { username, signinChallenge },
+      body: { username, email, signinChallenge },
     } = parseRequest(request);
 
     try {
-      const user = await userClient.getByUsername(username);
+      const user = await getUser(username, email);
       if (!user) {
         return response(httpErrorCodes.BAD_REQUEST, 400);
       }
@@ -202,7 +244,7 @@ export const userController = {
         return response(httpErrorCodes.NOT_FOUND, 404);
       }
 
-      const uri = await twoFactorClient.generateSecret(user.username);
+      const uri = await twoFactorClient.generateSecret(user.username || user.email);
 
       return response({ uri }, 200);
     } catch (e) {

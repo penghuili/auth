@@ -44,6 +44,7 @@
     "prettier": "2.6.2"
   },
   "scripts": {
+    "time": "sudo ntpdate time.nist.gov",
     "cc": "node scripts/commit.js",
     "dt": "npm run prepare-build && claudia update --version test --timeout 600 --no-optional-dependencies",
     "dp": "npm run prepare-build && claudia update --version prod --timeout 600 --no-optional-dependencies",

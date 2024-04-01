@@ -1,6 +1,7 @@
 export function mapUser({
   id,
   username,
+  email,
   publicKey,
   encryptedPrivateKey,
   twoFactorSecret,
@@ -12,6 +13,7 @@ export function mapUser({
   return {
     id,
     username,
+    email,
     publicKey,
     encryptedPrivateKey,
     twoFactorUri: twoFactorSecret?.uri,
