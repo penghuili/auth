@@ -3,6 +3,7 @@ import { mapUser } from '../dtos/mapUser';
 import { telegramClient } from '../shared-private/node/telegramClient';
 import { encryptMessageAsymmetric } from '../shared/js/encryption';
 import { httpErrorCodes } from '../shared/js/httpErrorCodes';
+import { lowercaseAndTrim } from '../shared/js/lowercaseAndTrim';
 import { isValidUsername } from '../shared/js/regex';
 import { hasValidIssuedAt } from '../shared/node/hasValidIssuedAt';
 import { parseRequest } from '../shared/node/parseRequest';
@@ -30,32 +31,35 @@ export const userController = {
     } = parseRequest(request);
 
     try {
-      if (!username && !email) {
+      const updatedUsername = lowercaseAndTrim(username);
+      const updatedEmail = lowercaseAndTrim(email);
+
+      if (!updatedUsername && !updatedEmail) {
         return response(httpErrorCodes.NO_USERNAME_OR_EMAIL, 400);
       }
 
-      if (username) {
-        const isValidName = isValidUsername(username);
+      if (updatedUsername) {
+        const isValidName = isValidUsername(updatedUsername);
         if (!isValidName) {
           return response(httpErrorCodes.INVALID_USERNAME, 400);
         }
       }
 
-      const existingUser = await getUser(username, email);
+      const existingUser = await getUser(updatedUsername, updatedEmail);
       if (existingUser) {
         return response(httpErrorCodes.ALREADY_EXISTS, 400);
       }
 
       const { id } = await userClient.create({
-        username,
-        email,
+        username: updatedUsername,
+        email: updatedEmail,
         publicKey,
         encryptedPrivateKey,
       });
 
       await telegramClient.sendMessage(process.env.ADMIN_TELEGRAM_ID, `Someone signed up :)`);
 
-      return response({ id, username, email }, 200);
+      return response({ id, username: updatedUsername, email: updatedEmail }, 200);
     } catch (e) {
       console.log('signup error', e);
       return response(httpErrorCodes.UNKNOWN, 400);
@@ -68,7 +72,10 @@ export const userController = {
     } = parseRequest(request);
 
     try {
-      const user = await getUser(username, email);
+      const updatedUsername = lowercaseAndTrim(username);
+      const updatedEmail = lowercaseAndTrim(email);
+
+      const user = await getUser(updatedUsername, updatedEmail);
 
       if (user) {
         const { id, publicKey, encryptedPrivateKey, signinChallenge } = user;
@@ -90,7 +97,10 @@ export const userController = {
     } = parseRequest(request);
 
     try {
-      const user = await getUser(username, email);
+      const updatedUsername = lowercaseAndTrim(username);
+      const updatedEmail = lowercaseAndTrim(email);
+
+      const user = await getUser(updatedUsername, updatedEmail);
 
       if (user) {
         const { id, publicKey, encryptedPrivateKey, signinChallenge } = user;
@@ -112,7 +122,10 @@ export const userController = {
     } = parseRequest(request);
 
     try {
-      const user = await getUser(username, email);
+      const updatedUsername = lowercaseAndTrim(username);
+      const updatedEmail = lowercaseAndTrim(email);
+
+      const user = await getUser(updatedUsername, updatedEmail);
       if (!user) {
         return response(httpErrorCodes.BAD_REQUEST, 400);
       }
